@@ -83,14 +83,15 @@ done(null, results[0]);
 
 function validPassword(password,hash)
 {
-var hashVerify=crypto.pbkdf2Sync(password,salt,10000,60,'sha512').toString('hex');
+var hashVerify=crypto.createHash('sha512').update(password).digest('hex');
 return hash === hashVerify;
 }
-
 function genPassword(password)
 {
 return crypto.createHash('sha512').update(password).digest('hex');
 }
+
+
 
 function isAuth(req,res,next)
 {
@@ -191,6 +192,7 @@ res.render("protected", {
 isAdmin: admin, username: req.user.username
 });
 });
+
 
 app.get('/userAlreadyExists', (req, res, next) => {
 console.log("Inside get");
