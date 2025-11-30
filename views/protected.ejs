@@ -2,22 +2,7 @@
 <head></head>
 <body>
 <%- include('top', {isAuth: true, isAdmin: isAdmin, userName: username}); %>
-
 <h1>Dashboard for logged in users</h1>
-<h3>Regisztrált felhasználók:</h3>
-    <table border="1">
-        <tr>
-            <th>ID</th>
-            <th>Név</th>
-            <th>Jogosultság</th>
-        </tr>
-        <% usersList.forEach(function(user) { %>
-            <tr>
-                <td><%= user.id %></td>
-                <td><%= user.username %></td>
-                <td><%= user.isAdmin ? 'Admin' : 'User' %></td>
-            </tr>
-        <% }); %>
-    </table>
+
 </body>
 </html>

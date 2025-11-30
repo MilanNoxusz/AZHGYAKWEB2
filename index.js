@@ -25,12 +25,11 @@ maxAge:1000*60*60*24,
 }
 }));
 
-app.use(passport.initialize());
-app.use(passport.session());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
 extended: true
 }));
+
 app.use(express.static('public'));
 app.set("view engine", "ejs");
 
@@ -47,7 +46,7 @@ console.log("Connected");
 else
 console.log("Conection Failed");
 });
-// A felhasználók bejelentkezési neve és jelszava:
+
 const customFields={
 usernameField:'uname',
 passwordField:'pw',
@@ -81,6 +80,7 @@ done(null, results[0]);
 });
 });
 
+
 function validPassword(password,hash)
 {
 var hashVerify=crypto.createHash('sha512').update(password).digest('hex');
@@ -91,8 +91,6 @@ function genPassword(password)
 return crypto.createHash('sha512').update(password).digest('hex');
 }
 
-
-
 function isAuth(req,res,next)
 {
 if(req.isAuthenticated())
@@ -100,10 +98,17 @@ next();
 else
 res.redirect('/notAuthorized');
 }
+
+function isAdmin(req,res,next)
+{
+if(req.isAuthenticated() && req.user.isAdmin==1)
+next();
+else
+res.redirect('/notAuthorizedAdmin');
+}
+
 function userExists(req,res,next)
 {
-// ?: preparált lekérdezés: Web-1-ben tanultuk
-// ? <= [req.body.uname]
 connection.query('Select * from users where username=? ', [req.body.uname], function(error, results, fields) {
 if (error)
 console.log("Error");
@@ -121,10 +126,10 @@ next();
 });
 
 /*routes*/
+
 app.get('/login', (req, res, next) => {
 res.render('login') // ez a next()
 });
-
 app.get('/logout', function(req, res, next) {
 // kiüríti a session táblát:
 req.session.destroy(function (err) {
@@ -133,23 +138,17 @@ res.clearCookie('session_cookie_name');
 res.redirect('/');
 });
 });
-
-
 app.get('/login-success', (req, res, next) => {
 res.redirect('/protected-route');
 });
-
-
 app.get('/login-failure', (req, res, next) => {
 res.send('You entered the wrong password.');
 });
-
 
 app.get('/register', (req, res, next) => {
 console.log("Inside get");
 res.render('register')
 });
-
 
 app.post('/register',userExists,(req,res,next)=>{
 // ha nem szerepel az adatbázisban, akkor a jelszó elkészítése után beírjuk az adatbázisba:
@@ -169,6 +168,7 @@ res.redirect('/login');
 });
 
 app.post('/login',passport.authenticate('local',{failureRedirect:'/login-failure',successRedirect:'/login-success'}));
+
 app.get('/', (req, res, next) => {
 auth=false
 username=""
@@ -193,7 +193,11 @@ isAdmin: admin, username: req.user.username
 });
 });
 
-
+app.get('/admin-route',isAdmin,(req, res, next) => {
+res.render("admin", {
+userName: req.user.username
+});
+});
 app.get('/userAlreadyExists', (req, res, next) => {
 console.log("Inside get");
 res.send('<h1>Sorry This username is taken </h1><p><a href="/register">Register with different username</a></p>');
@@ -202,11 +206,12 @@ app.get('/notAuthorized', (req, res, next) => {
 console.log("Inside get");
 res.send('<h1>You are not authorized to view the resource </h1><p><a href="/login">Retry Login</a></p>');
 });
+
 app.get('/notAuthorizedAdmin', (req, res, next) => {
+
 console.log("Inside get");
 res.send('<h1>You are not authorized to view the resource as you are not the admin of the page </h1><p><a href="/login">Retry to Login as admin</a></p>');
 });
 app.listen(3000, function() {
 console.log('App listening on port 3000!')
 });
-
